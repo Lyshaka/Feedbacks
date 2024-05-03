@@ -14,5 +14,6 @@ public class PortalManager : MonoBehaviour
 	void InvokeEnemy()
 	{
 		GameObject obj = Instantiate(EnemyPrefab, transform.position, transform.rotation);
+		Camera.main.GetComponent<ScreenShake>().AddTrauma(0.3f);
 	}
 }

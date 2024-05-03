@@ -19,7 +19,6 @@ public class BulletController : MonoBehaviour
 		Vector2 mousePos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0f));
 		Vector2 myPos = transform.position;
 		Vector2 dir = mousePos - myPos;
-		Debug.Log(dir);
 		transform.rotation = Quaternion.LookRotation(Vector3.forward, dir);
 
 		rb.velocity = transform.up * Velocity * Time.fixedDeltaTime;
@@ -33,7 +32,7 @@ public class BulletController : MonoBehaviour
 		}
 		else if (collision.CompareTag("Enemy"))
 		{
-			collision.gameObject.GetComponent<EnemyController>().GetDamage(Damage);
+			collision.gameObject.GetComponent<EnemyController>().GetDamage(Damage, rb.velocity);
 			StartCoroutine(PlayFeedback());
 		}
 	}

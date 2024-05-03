@@ -4,216 +4,219 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [Header("Movement")]
-    public float Speed = 450;
-    public bool RotateToDirection = false; // Rotate To The Movement Direction
-    public bool RotateWithMouseClick = false; // Rotate To The Direction Of The Mouse When Click , Usefull For Attacking
+	[Header("Movement")]
+	public float Speed = 450;
+	public bool RotateToDirection = false; // Rotate To The Movement Direction
+	public bool RotateWithMouseClick = false; // Rotate To The Direction Of The Mouse When Click , Usefull For Attacking
 
-    [Header("Jumping")]
-    public float JumpPower = 22; // How High The Player Can Jump
-    public float Gravity = 6; // How Fast The Player Will Pulled Down To The Ground, 6 Feels Smooth
-    public int AirJumps = 1; // Max Amount Of Air Jumps, Set It To 0 If You Dont Want To Jump In The Air
-    public LayerMask jumpableLayer; // The Layers That Represent The Ground, Any Layer That You Want The Player To Be Able To Jump In
+	[Header("Jumping")]
+	public float JumpPower = 22; // How High The Player Can Jump
+	public float Gravity = 6; // How Fast The Player Will Pulled Down To The Ground, 6 Feels Smooth
+	public int AirJumps = 1; // Max Amount Of Air Jumps, Set It To 0 If You Dont Want To Jump In The Air
+	
 
-    [Header("Dashing")]
-    public float DashPower = 3; // It Is A Speed Multiplyer, A Value Of 2 - 3 Is Recommended.
-    public float DashDuration = 0.20f; // Duration Of The Dash In Seconds, Recommended 0.20f.
-    public float DashCooldown = 0.5f; // Duration To Be Able To Dash Again.
-    public bool AirDash = true; // Can Dash In Air ?
+	[Header("Dashing")]
+	public float DashPower = 3; // It Is A Speed Multiplyer, A Value Of 2 - 3 Is Recommended.
+	public float DashDuration = 0.20f; // Duration Of The Dash In Seconds, Recommended 0.20f.
+	public float DashCooldown = 0.5f; // Duration To Be Able To Dash Again.
+	public bool AirDash = true; // Can Dash In Air ?
 
-    [Header("Attacking")]
-    public GameObject BulletPrefab;
+	[Header("Attacking")]
+	public GameObject BulletPrefab;
 
-    // Private Variables
-    bool canMove = true;
-    bool canDash = true;
+	[Header("Trail Materials")]
+	[SerializeField] private Material defaultMaterial;
+	[SerializeField] private Material jumpMaterial;
+	[SerializeField] private Material dashMaterial;
 
-    float MoveDirection;
-    int currentJumps = 0;
+	// Private Variables
+	bool canMove = true;
+	bool canDash = true;
+	bool grounded = false;
+	bool lastFrameGrounded = false;
+	float maxFallingVelocity = 0f;
+	
+	GroundCheck gc;
+	ScreenShake shaker; //Pas à la cuillère
+
+	float MoveDirection;
+	int currentJumps = 0;
  
-    Rigidbody2D rb;
-    BoxCollider2D col; // Change It If You Use Something Else That Box Collider, Make Sure You Update The Reference In Start Function
+	Rigidbody2D rb;
+	BoxCollider2D col; // Change It If You Use Something Else That Box Collider, Make Sure You Update The Reference In Start Function
 
 
-    ////// START & UPDATE :
+	////// START & UPDATE :
 
-    void Start()
-    {
-        canMove = true;
-        rb = GetComponent<Rigidbody2D>();
-        col = GetComponent<BoxCollider2D>();
-        rb.gravityScale = Gravity;
+	void Start()
+	{
+		canMove = true;
+		rb = GetComponent<Rigidbody2D>();
+		col = GetComponent<BoxCollider2D>();
+		rb.gravityScale = Gravity;
+		shaker = Camera.main.GetComponent<ScreenShake>();
+		GetComponent<TrailRenderer>().material = defaultMaterial;
+		gc = GetComponentInChildren<GroundCheck>();
+	}
+	void Update()
+	{
+		// Get Player Movement Input
+		MoveDirection = (Input.GetAxisRaw("Horizontal")); 
+		// Rotation
+		RotateToMoveDirection();
 
-    }   
-    void Update()
-    {
-        // Get Player Movement Input
-        MoveDirection = (Input.GetAxisRaw("Horizontal")); 
-        // Rotation
-        RotateToMoveDirection();
+		if (rb.velocity.y < (-maxFallingVelocity))
+		{
+			maxFallingVelocity = -rb.velocity.y;
+		}
 
-        // Rotate and Attack When Click Left Mouse Button
-        if (Input.GetKeyDown(KeyCode.Mouse0))
-        {
-            RotateToMouse();
-            Attack();
-        }
+		lastFrameGrounded = grounded;
+		grounded = gc.GetGrounded();
+		
 
-        // Jumping
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            Jump();
-        }
+		// Rotate and Attack When Click Left Mouse Button
+		if (Input.GetKeyDown(KeyCode.Mouse0))
+		{
+			RotateToMouse();
+			shaker.AddTrauma(0.12f);
+			Attack();
+		}
 
-        // Dashing
-        if (Input.GetKeyDown(KeyCode.LeftShift))
-        {
-            if (MoveDirection != 0 && canDash)
-            {
-                if (!AirDash && !InTheGround())
-                    return;
+		// Jumping
+		if (Input.GetKeyDown(KeyCode.Space))
+		{
+			Jump();
+		}
+
+		// Dashing
+		if (Input.GetKeyDown(KeyCode.LeftShift))
+		{
+			if (MoveDirection != 0 && canDash)
+			{
+				if (!AirDash && !grounded)
+					return;
 
 
-                StartCoroutine(Dash());
-            }
-        }
-    }
-    void FixedUpdate()
-    {
-        Move();
-    } 
+				StartCoroutine(Dash());
+			}
+		}
 
-    ///// MOVEMENT FUNCTIONS :
+		if (!lastFrameGrounded &&  grounded)
+		{
+			TouchedGround();
+		}
+	}
+	void FixedUpdate()
+	{
+		Move();
+	} 
 
-    void Move()
-    {
-        if (canMove)
-        {
-            rb.velocity = new Vector2(MoveDirection * Speed * Time.fixedDeltaTime, rb.velocity.y);
-        }
+	///// MOVEMENT FUNCTIONS :
 
-    } 
-    bool InTheGround()
-    {
-        // Make sure you set the ground layer to the ground
-        RaycastHit2D ray;
+	void Move()
+	{
+		if (canMove)
+		{
+			rb.velocity = new Vector2(MoveDirection * Speed * Time.fixedDeltaTime, rb.velocity.y);
+		}
 
-         if (transform.rotation.y == 0)
-         {
-            Vector2 position = new Vector2(col.bounds.center.x - col.bounds.extents.x, col.bounds.min.y);
-             ray = Physics2D.Raycast(position, Vector2.down, col.bounds.extents.y + 0.2f, jumpableLayer);
-         }
-         else
-         {
-            Vector2 position = new Vector2(col.bounds.center.x + col.bounds.extents.x, col.bounds.min.y);
-            ray = Physics2D.Raycast(position, Vector2.down, col.bounds.extents.y + 0.2f, jumpableLayer);
-         }       
+	}
 
-        if (ray.collider != null)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    void Jump()
-    {
+	void Jump()
+	{
+		if (grounded)
+		{
+			rb.velocity = Vector2.up * JumpPower;
+			GetComponent<TrailRenderer>().material = jumpMaterial;
+		}
+		else
+		{
+			if (currentJumps >= AirJumps)
+				return;
 
-        if (InTheGround())
-        {
-            rb.velocity = Vector2.up * JumpPower;
-        }
-        else
-        {
-            if (currentJumps >= AirJumps)
-                return;
+			currentJumps ++;
+			rb.velocity = Vector2.up * JumpPower;
+			GetComponent<TrailRenderer>().material = jumpMaterial;
+		}
+	}
 
-            currentJumps ++;
-            rb.velocity = Vector2.up * JumpPower;
-        }
+	void Attack()
+	{
+		Instantiate(BulletPrefab, transform.position, transform.rotation);
+	}
 
-    }
+	void RotateToMoveDirection()
+	{
+		if (!RotateToDirection)
+			return;
 
-    void Attack()
-    {
-        Instantiate(BulletPrefab, transform.position, transform.rotation);
-    }
+		if (MoveDirection != 0 && canMove)
+		{
+			if (MoveDirection > 0)
+			{
+				transform.rotation = new Quaternion(0, 0, 0, 0);
+				
+			}
+			else
+			{
+				transform.rotation = new Quaternion(0, 180, 0, 0);
+			}
+		}
+	}
 
-    void RotateToMoveDirection()
-    {
-        if (!RotateToDirection)
-            return;
+	///// SPECIAL  FUNCTIONS : 
 
-        if (MoveDirection != 0 && canMove)
-        {
-            if (MoveDirection > 0)
-            {
-                transform.rotation = new Quaternion(0, 0, 0, 0);
-                
-            }
-            else
-            {
-                transform.rotation = new Quaternion(0, 180, 0, 0);
-            }
-        }
-    }
+	// Multiply The Speed With Certain Amount For A Certain Duration
+	IEnumerator Dash()
+	{
+		canDash = false;
+		float originalSpeed = Speed; 
+	   
+		Speed *= DashPower;
+		rb.gravityScale = 0f; // You can delete this line if you don't want the player to freez in the air when dashing
+		rb.velocity = new Vector2(rb.velocity.x, 0);
+		GetComponent<TrailRenderer>().material = dashMaterial;
 
-    ///// SPECIAL  FUNCTIONS : 
+		//  You Can Add A Camera Shake Function here
 
-    // Multiply The Speed With Certain Amount For A Certain Duration
-    IEnumerator Dash()
-    {
-        canDash = false;
-        float originalSpeed = Speed; 
-       
-        Speed *= DashPower;
-        rb.gravityScale = 0f; // You can delete this line if you don't want the player to freez in the air when dashing
-        rb.velocity = new Vector2(rb.velocity.x, 0);
+		yield return new WaitForSeconds(DashDuration); 
 
-        //  You Can Add A Camera Shake Function here
+		rb.gravityScale = Gravity;
+		Speed = originalSpeed;
+		GetComponent<TrailRenderer>().material = defaultMaterial;
 
-        yield return new WaitForSeconds(DashDuration); 
+		yield return new WaitForSeconds(DashCooldown - DashDuration);
 
-        rb.gravityScale = Gravity;
-        Speed = originalSpeed;
+		canDash = true;
+	}
 
-        yield return new WaitForSeconds(DashCooldown - DashDuration);
+	void TouchedGround()
+	{
+		GetComponent<TrailRenderer>().material = defaultMaterial;
+		shaker.AddTrauma(Mathf.Clamp(maxFallingVelocity, 0f, 150f) / 150f);
+		maxFallingVelocity = 0f;
+		currentJumps = 0;
+		gc.PlayGroundParticle();
+	}
 
-        canDash = true;
-    }
+	// Make Player Facing The Mouse Cursor , Can Be Called On Update , Or When The Player Attacks He Will Turn To The Mouse Direction
+	void RotateToMouse()
+	{
+		if (!RotateWithMouseClick)
+			return;
 
-    // Make Player Facing The Mouse Cursor , Can Be Called On Update , Or When The Player Attacks He Will Turn To The Mouse Direction
-    void RotateToMouse()
-    {
-        if (!RotateWithMouseClick)
-            return;
+		Vector2 mousePos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, -Camera.main.transform.position.z));
+		Vector2 myPos = transform.position;
 
-        Vector2 mousePos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, -Camera.main.transform.position.z));
-        Vector2 myPos = transform.position;
+		Vector2 dir = mousePos - myPos;  
 
-        Vector2 dir = mousePos - myPos;  
-
-        if (dir.x < 0)
-        {
-            transform.rotation = new Quaternion(0, 180, 0, 0);
-        }
-        else
-        {
-            transform.rotation = new Quaternion(0, 0, 0, 0);
-        }
-    }
-
-    // Reset Jump Counts When Collide With The Ground
-    void OnCollisionEnter2D(Collision2D collision)
-    {
-        RaycastHit2D ray;
-        ray = Physics2D.Raycast(col.bounds.center, Vector2.down, col.bounds.extents.y + 0.2f, jumpableLayer);
-
-        if (ray.collider != null)
-        {
-            currentJumps = 0;
-        }
-    }
+		if (dir.x < 0)
+		{
+			transform.rotation = new Quaternion(0, 180, 0, 0);
+		}
+		else
+		{
+			transform.rotation = new Quaternion(0, 0, 0, 0);
+		}
+	}
 }
