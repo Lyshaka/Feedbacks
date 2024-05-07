@@ -78,7 +78,7 @@ public class PlayerController : MonoBehaviour
 		if (Input.GetKeyDown(KeyCode.Mouse0))
 		{
 			RotateToMouse();
-			shaker.AddTrauma(0.12f);
+			shaker.AddTrauma(0.08f);
 			Attack();
 		}
 

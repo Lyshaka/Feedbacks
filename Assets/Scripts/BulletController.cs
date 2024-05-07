@@ -6,6 +6,7 @@ public class BulletController : MonoBehaviour
 {
 	public float Damage;
 	public float Velocity;
+	public GameObject bloodObject;
 	[HideInInspector] public bool IsFlipped;
 
 	// Private Variables
@@ -33,6 +34,7 @@ public class BulletController : MonoBehaviour
 		else if (collision.CompareTag("Enemy"))
 		{
 			collision.gameObject.GetComponent<EnemyController>().GetDamage(Damage, rb.velocity);
+			Instantiate(bloodObject, transform.position, Quaternion.Euler((transform.eulerAngles.z + 90f) * -1, 90f, 0f));
 			StartCoroutine(PlayFeedback());
 		}
 	}
