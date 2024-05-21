@@ -3,25 +3,28 @@ using UnityEngine;
 public class DustParticle : MonoBehaviour
 {
 	Rigidbody2D rb;
-	ParticleSystem ps;
+	[SerializeField] ParticleSystem ps;
 	GroundCheck gc;
 
 	// Start is called once before the first execution of Update after the MonoBehaviour is created
 	void Start()
 	{
 		rb = GetComponentInParent<Rigidbody2D>();
-		ps = GetComponent<ParticleSystem>();
 		gc = transform.parent.GetComponentInChildren<GroundCheck>();
 	}
 
 	// Update is called once per frame
 	void Update()
 	{
+		Debug.Log("velocity : " + rb.velocity.magnitude);
 		Debug.Log("grounded : " + gc.GetGrounded());
-		if (rb.velocity.magnitude > 0)
+		if (rb.velocity.magnitude > 0 && gc.GetGrounded())
 		{
 			Debug.Log("yes");
-			ps.Play();
+			while (!ps.isPlaying)
+			{
+				ps.Play();
+			}
 		}
 		else
 		{

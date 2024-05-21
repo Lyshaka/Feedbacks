@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a198e1e780c5e574393979829d2cc7a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ps: {fileID: 2548995870591531659}
 --- !u!199 &4201916775684507801
 ParticleSystemRenderer:
   serializedVersion: 6
@@ -5204,6 +5205,7 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
+  ps: {fileID: 6284011438910354992}
 --- !u!61 &3933042841637209873
 BoxCollider2D:
   m_ObjectHideFlags: 0

@@ -158,7 +158,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      hiclipart.com_0: -4848640753749312117
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -5,7 +5,7 @@ public class GroundCheck : MonoBehaviour
 	[SerializeField] private LayerMask groundLayer;
 
 	private bool grounded;
-	private ParticleSystem ps;
+	[SerializeField] private ParticleSystem ps;
 
 	public bool GetGrounded()
 	{
@@ -20,7 +20,6 @@ public class GroundCheck : MonoBehaviour
 	private void Start()
 	{
 		GetComponent<Collider2D>().includeLayers = groundLayer;
-		ps = GetComponent<ParticleSystem>();
 	}
 
 	private void OnTriggerEnter2D(Collider2D collision)
