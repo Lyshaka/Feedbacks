@@ -37,7 +37,7 @@ public class PlayerController : MonoBehaviour
 	float maxFallingVelocity = 0f;
 	
 	GroundCheck gc;
-	ScreenShake shaker; //Pas à la cuillère
+	ScreenShake shaker; //Pas ï¿½ la cuillï¿½re
 
 	float MoveDirection;
 	int currentJumps = 0;
@@ -65,9 +65,9 @@ public class PlayerController : MonoBehaviour
 		// Rotation
 		RotateToMoveDirection();
 
-		if (rb.velocity.y < (-maxFallingVelocity))
+		if (rb.linearVelocity.y < (-maxFallingVelocity))
 		{
-			maxFallingVelocity = -rb.velocity.y;
+			maxFallingVelocity = -rb.linearVelocity.y;
 		}
 
 		lastFrameGrounded = grounded;
@@ -117,7 +117,7 @@ public class PlayerController : MonoBehaviour
 	{
 		if (canMove)
 		{
-			rb.velocity = new Vector2(MoveDirection * Speed * Time.fixedDeltaTime, rb.velocity.y);
+			rb.linearVelocity = new Vector2(MoveDirection * Speed * Time.fixedDeltaTime, rb.linearVelocity.y);
 		}
 
 	}
@@ -126,7 +126,7 @@ public class PlayerController : MonoBehaviour
 	{
 		if (grounded)
 		{
-			rb.velocity = Vector2.up * JumpPower;
+			rb.linearVelocity = Vector2.up * JumpPower;
 			GetComponent<TrailRenderer>().material = jumpMaterial;
 		}
 		else
@@ -135,7 +135,7 @@ public class PlayerController : MonoBehaviour
 				return;
 
 			currentJumps ++;
-			rb.velocity = Vector2.up * JumpPower;
+			rb.linearVelocity = Vector2.up * JumpPower;
 			GetComponent<TrailRenderer>().material = jumpMaterial;
 		}
 	}
@@ -174,7 +174,7 @@ public class PlayerController : MonoBehaviour
 	   
 		Speed *= DashPower;
 		rb.gravityScale = 0f; // You can delete this line if you don't want the player to freez in the air when dashing
-		rb.velocity = new Vector2(rb.velocity.x, 0);
+		rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0);
 		GetComponent<TrailRenderer>().material = dashMaterial;
 
 		//  You Can Add A Camera Shake Function here

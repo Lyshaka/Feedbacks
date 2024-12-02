@@ -22,7 +22,7 @@ public class BulletController : MonoBehaviour
 		Vector2 dir = mousePos - myPos;
 		transform.rotation = Quaternion.LookRotation(Vector3.forward, dir);
 
-		rb.velocity = transform.up * Velocity * Time.fixedDeltaTime;
+		rb.linearVelocity = transform.up * Velocity * Time.fixedDeltaTime;
 	}
 
 	void OnTriggerEnter2D(Collider2D collision)
@@ -33,7 +33,7 @@ public class BulletController : MonoBehaviour
 		}
 		else if (collision.CompareTag("Enemy"))
 		{
-			collision.gameObject.GetComponent<EnemyController>().GetDamage(Damage, rb.velocity);
+			collision.gameObject.GetComponent<EnemyController>().GetDamage(Damage, rb.linearVelocity);
 			Instantiate(bloodObject, transform.position, Quaternion.Euler((transform.eulerAngles.z + 90f) * -1, 90f, 0f));
 			StartCoroutine(PlayFeedback());
 		}
@@ -41,7 +41,7 @@ public class BulletController : MonoBehaviour
 
 	IEnumerator PlayFeedback()
 	{
-		rb.velocity = Vector2.zero;
+		rb.linearVelocity = Vector2.zero;
 		GetComponent<Renderer>().enabled = false;
 		GetComponent<Rigidbody2D>().gravityScale = 0;
 		GetComponent<Collider2D>().enabled = false;

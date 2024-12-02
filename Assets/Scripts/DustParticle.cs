@@ -16,9 +16,9 @@ public class DustParticle : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-		Debug.Log("velocity : " + rb.velocity.magnitude);
+		Debug.Log("velocity : " + rb.linearVelocity.magnitude);
 		Debug.Log("grounded : " + gc.GetGrounded());
-		if (rb.velocity.magnitude > 0 && gc.GetGrounded())
+		if (rb.linearVelocity.magnitude > 0 && gc.GetGrounded())
 		{
 			Debug.Log("yes");
 			while (!ps.isPlaying)

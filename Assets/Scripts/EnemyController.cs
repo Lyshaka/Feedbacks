@@ -35,7 +35,7 @@ public class EnemyController : MonoBehaviour
 		PreviousPlayerDirection = PlayerDirection;
 
 		//Go towards Player
-		rb.velocity = new Vector2(transform.forward.z * DriftFactor * Speed * Time.fixedDeltaTime, rb.velocity.y);
+		rb.linearVelocity = new Vector2(transform.forward.z * DriftFactor * Speed * Time.fixedDeltaTime, rb.linearVelocity.y);
 
 		if(Speed <= 0)
 		{
